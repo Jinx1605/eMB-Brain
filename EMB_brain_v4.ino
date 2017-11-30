@@ -277,7 +277,6 @@ void preflightChecks() {
   // setupESC
   if (setupESC(0)) {
     oledPrint("EverythingGood To Go", 500);
-    lightsOn();
   } else {
     oledPrint("Sabertooth ESC Missing", 500);
   }
