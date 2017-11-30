@@ -275,22 +275,37 @@ void preflightChecks() {
    NeoPixel lights.
 */
 void setupLights() {
-  frnt_lights.setBrightness(255);
   frnt_lights.begin();
-  rear_lights.setBrightness(127);
   rear_lights.begin();
   frnt_lights.show();
   rear_lights.show();
 }
 
 void lightsOn() {
-  colorWipe(frnt_lights, frnt_lights.Color(0, 0, 0, 255), 255, 0);
-  colorWipe(rear_lights, rear_lights.Color(255, 0, 0, 0), 127, 0);
+  frontLights(frnt_lights.Color(0,0,0,255), 255);
+  rearLights(rear_lights.Color(255,0,0,0), 127);
 }
 
 void lightsOff() {
-  colorWipe(frnt_lights, frnt_lights.Color(0, 0, 0, 0), 0, 0);
-  colorWipe(rear_lights, rear_lights.Color(0, 0, 0, 0), 0, 0);
+  frontLights(frnt_lights.Color(0,0,0,0), 0);
+  rearLights(rear_lights.Color(0,0,0,0), 0);
+}
+
+// Fill the dots one after the other with a color
+void frontLights(uint32_t color, uint16_t brightness) {
+  frnt_lights.setBrightness(brightness);
+  for (uint16_t i=0; i < frnt_lights.numPixels(); i++) {
+    frnt_lights.setPixelColor(i, color);
+    frnt_lights.show();
+  }
+}
+
+void rearLights(uint32_t color, uint16_t brightness) {
+  rear_lights.setBrightness(brightness);
+  for (uint16_t i=0; i < rear_lights.numPixels(); i++) {
+    rear_lights.setPixelColor(i, color);
+    rear_lights.show();
+  }
 }
 
 /*
@@ -657,16 +672,6 @@ String getTemp() {
   temp = String(tmp);
   // temp = (temp_msb * 1.8) + 28;
   return temp;
-}
-
-// Fill the dots one after the other with a color
-void colorWipe(Adafruit_NeoPixel strand, uint32_t c, uint8_t brightness, uint8_t wait) {
-  strand.setBrightness(brightness);
-  for (uint16_t i = 0; i < strand.numPixels(); i++) {
-    strand.setPixelColor(i, c);
-    strand.show();
-    delay(wait);
-  }
 }
 
 
