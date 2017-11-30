@@ -37,6 +37,17 @@
 #endif
 
 /*
+   Light Detector Settings 
+*/
+#ifdef _VARIANT_ARDUINO_STM32_
+#define LDR_PIN PA2
+#else
+#define LDR_PIN A4
+#endif
+#define LDR_HIGH 825 // upper limit/on
+#define LDR_LOW 600  // lower limit/off
+
+/*
    Attopilot pin settings
 */
 #ifdef _VARIANT_ARDUINO_STM32_
@@ -130,6 +141,9 @@ float apAFinal; // converted amperage
 float throttle = 0;
 float throttlePercentage = 0;
 boolean killSwitch = true;
+
+boolean isDayTime = false;
+boolean isLightsOn = false;
 
 float nunchukInfo[4] = {
   0.0, // throttle
@@ -449,6 +463,7 @@ void loop() {
   theTemp = getTemp();
 #endif
 
+  readLDR();
   readAttopilot();
   motorInfo(motor1, 1);
   batteryVoltage = String(motor1[0]);
@@ -477,6 +492,31 @@ void loop() {
     logData(false);
     oledUpdate();
     loopCount = 0;
+  }
+}
+
+/*
+   readLDR Function
+   reads light detector and
+   turns NeoPixels on or off
+   Set High and Low Settings
+   in the #defines LDR_HIGH
+   and LDR_LOW
+*/
+void readLDR() {
+  int LDRReading = analogRead(LDR_PIN);
+  Serial.println(LDRReading);
+  if (LDRReading >= LDR_HIGH) {
+    isDayTime = false;
+  } else if (LDRReading <= LDR_LOW) {
+    isDayTime = true;
+  }
+  if (!isDayTime && !isLightsOn) {
+    lightsOn();
+    isLightsOn = true;
+  } else if (isDayTime && isLightsOn) {
+    lightsOff();
+    isLightsOn = false;
   }
 }
 
