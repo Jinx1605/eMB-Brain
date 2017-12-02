@@ -156,6 +156,7 @@ boolean killSwitch = true;
 // LDR Detection states
 boolean isDayTime = false;
 boolean isLightsOn = false;
+int LDRReading = 0;
 
 // OLED Button States
 int buttonPushCounter = 0;   // counter for the number of button presses
@@ -472,6 +473,11 @@ void checkRTC() {
    setupESC Function
    inits Sabertooth ESC and
    can set freewheeling mode
+   (disable/enable regenerative braking)
+   
+   NOTE: Still need to figure out
+         how to check if ESC is
+         actually present or not.
 */
 boolean setupESC(int FreeWheel) {
   oledPrint("Checking Sabertooth ESC", 500);
@@ -561,8 +567,8 @@ void loop() {
    and LDR_LOW
 */
 void readLDR() {
-  int LDRReading = analogRead(LDR_PIN);
-  Serial.println(LDRReading);
+  LDRReading = analogRead(LDR_PIN);
+  // Serial.println(LDRReading);
   if (LDRReading >= LDR_HIGH) {
     isDayTime = false;
   } else if (LDRReading <= LDR_LOW) {
@@ -658,12 +664,13 @@ String theTime() {
 
   if (hr >= 13) {
     hr = hr - 12;
-    if (hr == 0) {
-      hr = 12;
-    }
     ampm = " pm";
   } else {
     ampm = " am";
+  }
+
+  if (hr == 0) {
+    hr = 12;
   }
 
   if (mn < 10) {
@@ -778,6 +785,8 @@ void logData(boolean toSerial) {
   dataString += String(timeNow);        // the time now
   dataString += String(",");
   dataString += String(theTemp);        // the temp outside
+  dataString += String(",");
+  dataString += String(LDRReading);     // brightness outside
   dataString += String(",");
   dataString += String(nunchukInfo[0]); // throttle
   dataString += String(",");
