@@ -86,6 +86,15 @@
 #define SD_CHIP_SELECT 4
 #endif
 
+/*
+   OLED Buttons
+*/
+#ifdef _VARIANT_ARDUINO_STM32_
+#define OLED_BTN_A PA15
+#else
+#define OLED_BTN_A 9
+#endif
+
 #define NUNCHUK_I2C_ADDRESS 82
 
 #define FPM_2_MPH 0.0114
@@ -126,6 +135,7 @@ RTC_PCF8523 rtc;
 RTC_DS3231 rtc;
 #endif
 
+// Global Use data
 String logName = "";
 String dateNow = "";
 String timeNow = "";
@@ -138,12 +148,20 @@ int apARaw; // raw amperage
 float apVFinal; // converted voltage
 float apAFinal; // converted amperage
 
+// More Global Use data
 float throttle = 0;
 float throttlePercentage = 0;
 boolean killSwitch = true;
 
+// LDR Detection states
 boolean isDayTime = false;
 boolean isLightsOn = false;
+
+// OLED Button States
+int buttonPushCounter = 0;   // counter for the number of button presses
+int buttonState = 0;         // current state of the button
+int lastButtonState = 0;     // previous state of the button
+
 
 float nunchukInfo[4] = {
   0.0, // throttle
@@ -227,10 +245,28 @@ void oledUpdate() {
   display.clearDisplay();
   display.setTextSize(1);
   display.setCursor(0, 0);
-  display.print(dateNow + "  " + timeNow);
+  display.print(dateNow + "  " + timeNow + " ");
   display.setTextSize(2);
-  disp += String(currentMPH);
-  disp += " Mph";
+  if (buttonPushCounter % 4 == 0) {
+    disp += String(currentMPH);
+    disp += " Mph";
+  }
+
+  if (buttonPushCounter % 4 == 1) {
+    disp += String(motor1[0]);
+    disp += "v";
+  }
+
+  if (buttonPushCounter % 4 == 2) {
+    disp += String(apAFinal);
+    disp += "A";
+  }
+
+  if (buttonPushCounter % 4 == 3) {
+    disp += String(motor1[4]);
+    disp += " RPM";
+  }
+  
   display.print(disp);
   display.display();
 }
@@ -241,6 +277,7 @@ void oledUpdate() {
    for hardware connections
 */
 void showSplash(int holdup) {
+  pinMode(OLED_BTN_A, INPUT_PULLUP);
   // Initialize OLED with I2C addr 0x32 (60)
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   // OLED Init done.
@@ -445,8 +482,21 @@ boolean setupESC(int FreeWheel) {
 
 void loop() {
 
-  // check to see if it's time to update things
-  unsigned long currentMillis = millis();
+  // read the pushbutton input pin:
+  buttonState = digitalRead(OLED_BTN_A);
+ 
+  // compare the buttonState to its previous state
+  if (buttonState != lastButtonState) {
+    // if the state has changed, increment the counter
+    if (buttonState == LOW) {
+      // if the current state is LOW then the button was pressed
+      buttonPushCounter++;
+    }
+  }
+  
+  // save the current state as the last state,
+  //for next time through the loop
+  lastButtonState = buttonState;
 
   throttle = readChuk();
   throttlePercentage = map(throttle, 0, 2047, 0, 100);
