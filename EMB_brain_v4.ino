@@ -241,11 +241,19 @@ void oledPrint(String err, int wait) {
    everything is peachy
 */
 void oledUpdate() {
+  String dateTime = "";
   String disp = "";
+  dateTime = dateNow + "  " + timeNow;
+  if (dateTime.length() != 21) {
+    int strDiff = 21 - dateTime.length();
+    for (int i=0; i < strDiff;i++) {
+      dateTime += " ";
+    }
+  }
   display.clearDisplay();
   display.setTextSize(1);
   display.setCursor(0, 0);
-  display.print(dateNow + "  " + timeNow + " ");
+  display.print(dateTime);
   display.setTextSize(2);
   if (buttonPushCounter % 4 == 0) {
     disp += String(currentMPH);
