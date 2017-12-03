@@ -196,6 +196,26 @@ float currentMPH;
 
 short loopCount = 0;
 
+String logTitles[17] = {
+  "Time",
+  "Temperature",
+  "Brightness",
+  "Throttle Raw",
+  "Throttle %",
+  "Z-Button",
+  "C-Button",
+  "Attopilot Voltage",
+  "Attopilot Amperage",
+  "ESC Battery Voltage",
+  "ESC Motor Amperage",
+  "ESC Motor Temperature",
+  "ESC Motor Torque",
+  "ESC Motor Current RPM",
+  "ESC Motor Maximum RPM",
+  "Wheel RPM",
+  "Current Mph"
+};
+
 ArduinoNunchuk nunchuk = ArduinoNunchuk();
 
 File logFile;
@@ -431,7 +451,22 @@ void setupLogFile() {
   }
 
   logFile = SD.open("/logs/" + logName, FILE_WRITE);
-  logFile.close();
+  if (logFile.size() == 0) {
+    // newly created, add titles
+    String title_str = "";
+    int titles_len = 17;
+    for(int i = 0; i < titles_len;i++) {
+      title_str += logTitles[i];
+      if (i != (titles_len - 1)) {
+        title_str += ",";
+      }
+    }
+    logFile.println(title_str);
+    logFile.close();
+  } else {
+    // just close for now.
+    logFile.close();
+  }
 
   if (SD.exists("/logs/" + logName)) {
     oledPrint(logName + " present!", 500);
@@ -789,7 +824,7 @@ void logData(boolean toSerial) {
   dataString += String(LDRReading);     // brightness outside
   dataString += String(",");
   dataString += String(nunchukInfo[0]); // throttle
-  dataString += String(",");
+  dataString += String(",");logFile.println(dataString);
   dataString += String(nunchukInfo[1]); // throttle %
   dataString += String(",");
   dataString += String(nunchukInfo[2]); // z-button state
