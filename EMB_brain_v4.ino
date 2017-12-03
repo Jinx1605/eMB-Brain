@@ -824,7 +824,7 @@ void logData(boolean toSerial) {
   dataString += String(LDRReading);     // brightness outside
   dataString += String(",");
   dataString += String(nunchukInfo[0]); // throttle
-  dataString += String(",");logFile.println(dataString);
+  dataString += String(",");
   dataString += String(nunchukInfo[1]); // throttle %
   dataString += String(",");
   dataString += String(nunchukInfo[2]); // z-button state
