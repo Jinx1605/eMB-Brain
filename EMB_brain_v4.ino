@@ -96,6 +96,7 @@
 #endif
 
 #define NUNCHUK_I2C_ADDRESS 82
+#define NUNCHUK_TYPE "wireless" // or "wireless"
 
 #define FPM_2_MPH 0.0114
 #define WHEEL_CIRCUMFERENCE 2.0125
@@ -547,7 +548,7 @@ void loop() {
   //for next time through the loop
   lastButtonState = buttonState;
 
-  throttle = readChuk();
+  throttle = readChuk(NUNCHUK_TYPE);
   throttlePercentage = map(throttle, 0, 2047, 0, 100);
   nunchukInfo[0] = throttle;
   nunchukInfo[1] = throttlePercentage;
@@ -641,8 +642,7 @@ void readAttopilot() {
    checks nunchuk for throttle,
    C & Z Button for values.
 */
-int readChuk() {
-
+int readChuk(String Type) {
   if (!checkNunchuk(false)) {
     killSwitch = true;
     throttle = 0;
@@ -653,12 +653,48 @@ int readChuk() {
 
   nunchuk.update();
 
-  // map values to ESC acceptable values
-  unsigned int tVal = nunchuk.analogY;
-  tVal = map(tVal, -2, 255, -2047, 2047);
+  unsigned int tVal;
+  boolean c_state;
+  boolean z_state;
+  
+  if (Type == "wired") {
+    tVal = nunchuk.analogX;
+    tVal = map(tVal, 1, 254, -2047, 2047);
+
+    int c_z_buttonState = nunchuk.accelZ;
+
+    if (c_z_buttonState == 8) {
+      z_state = true;
+    } else if (c_z_buttonState == 4) {
+      c_state = true;
+    } else if (c_z_buttonState == 0) {
+      z_state = true;
+      c_state = true;
+    } else {
+      c_state = false;
+      z_state = false;
+    }
+    
+  } else if (Type == "wireless") {
+    // map values to ESC acceptable values
+    tVal = nunchuk.analogY;
+    tVal = map(tVal, -2, 255, -2047, 2047);
+
+    if (!nunchuk.zButton){
+      z_state = false;
+    } else {
+      z_state = true;
+    }
+
+    if (!nunchuk.cButton) {
+      c_state = false;
+    } else {
+      c_state = true;
+    }
+  }
 
   // if Z button isnt pressed, 0 throttle.
-  if (!nunchuk.zButton) {
+  if (!z_state) {
     killSwitch = true;
     tVal = 0;
     nunchukInfo[0] = tVal;
@@ -670,7 +706,7 @@ int readChuk() {
   }
 
   // if C button is pressed engage horn
-  if (!nunchuk.cButton) {
+  if (!c_state) {
     nunchukInfo[3] = 0;
     // noTone(HORN_PIN);
   } else {
