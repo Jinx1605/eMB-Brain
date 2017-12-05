@@ -653,33 +653,36 @@ int readChuk(String Type) {
 
   nunchuk.update();
 
-  unsigned int tVal;
+  int tVal;
   boolean c_state;
   boolean z_state;
   
   if (Type == "wired") {
     tVal = nunchuk.analogX;
-    tVal = map(tVal, 1, 254, -2047, 2047);
-
+    tVal = map(tVal, 40, 216, -2047, 2047);
+    tVal = constrain(tVal, -2047, 2047);
     int c_z_buttonState = nunchuk.accelZ;
 
     if (c_z_buttonState == 8) {
       z_state = true;
+      c_state = false;
     } else if (c_z_buttonState == 4) {
+      z_state = false;
       c_state = true;
     } else if (c_z_buttonState == 0) {
       z_state = true;
       c_state = true;
     } else {
-      c_state = false;
       z_state = false;
+      c_state = false;
     }
     
   } else if (Type == "wireless") {
     // map values to ESC acceptable values
     tVal = nunchuk.analogY;
     tVal = map(tVal, -2, 255, -2047, 2047);
-
+    tVal = constrain(tVal, -2047, 2047);
+    
     if (!nunchuk.zButton){
       z_state = false;
     } else {
