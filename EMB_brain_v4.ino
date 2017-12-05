@@ -29,11 +29,11 @@
    NeoPixel pin settings
 */
 #ifdef _VARIANT_ARDUINO_STM32_
-#define NEOPIXEL_FRNT PC7
-#define NEOPIXEL_BACK PC5
+#define NEOPIXEL_FRNT PB5
+#define NEOPIXEL_BACK PB4
 #else
-#define NEOPIXEL_FRNT 6
-#define NEOPIXEL_BACK 5
+#define NEOPIXEL_FRNT 13
+#define NEOPIXEL_BACK 10
 #endif
 
 /*
@@ -91,8 +91,12 @@
 */
 #ifdef _VARIANT_ARDUINO_STM32_
 #define OLED_BTN_A PA15
+#define OLED_BTN_B PC7
+#define OLED_BTN_C PC5
 #else
 #define OLED_BTN_A 9
+#define OLED_BTN_B 6
+#define OLED_BTN_C 5
 #endif
 
 #define NUNCHUK_I2C_ADDRESS 82
