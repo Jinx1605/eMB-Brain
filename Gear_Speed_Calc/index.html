@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Gearing Calculator</title>
+  </head>
+  <body>
+    
+    <form id="gearing_calc">
+      Wheel Circumference: (In Feet)<br>
+      <input id="wheel_circumference" type="text" value="2.0125"><br>
+      Motor RPM per Volt:<br>
+      <select id="rpm_per_volt">
+        <option value="269">Ampflow A23-150 (269)</option>
+        <option value="257">Ampflow A28-150 (257)</option>
+        <option value="287">Ampflow F30-150 (287)</option>
+        <option value="237">Ampflow E30-150 (237)</option>
+      </select><br>
+      Battery Voltage:<br>
+      <input id="battery_voltage" type="text" value="28.8"><br>
+      Motor Tooth Count:<br>
+      <input id="motor_tooth_count" type="text" value="12"><br>
+      Wheel Tooth Count:<br>
+      <input id="wheel_tooth_count" type="text" value="44"><br>
+      Estimated MPH:<br>
+      <input id="estimated_mph" type="text" value="">
+    </form>
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
+    <script type="application/javascript">
+      var fpm_2_mph = 0.0114;
+      var reduction_ratio,
+          max_motor_rpm,
+          max_wheel_rpm,
+          max_wheel_mph;
+      
+      $(function() {
+        $("#gearing_calc").change(function(){
+          reduction_ratio = $("#wheel_tooth_count").val() / $("#motor_tooth_count").val();
+          max_motor_rpm = $("#battery_voltage").val() * $("#rpm_per_volt").val();
+          max_wheel_rpm = max_motor_rpm / reduction_ratio;
+          max_wheel_mph = max_wheel_rpm * fpm_2_mph;
+          $("#estimated_mph").val(max_wheel_mph);
+        });
+        $("#gearing_calc").trigger("change");
+      });
+    </script>
+  </body>
+</html>
