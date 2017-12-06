@@ -38,13 +38,14 @@
 
 /*
    Light Detector Settings 
+   LDR w/ 10k Ohm Resistor
 */
 #ifdef _VARIANT_ARDUINO_STM32_
 #define LDR_PIN PA2
 #else
 #define LDR_PIN A4
 #endif
-#define LDR_HIGH 825 // upper limit/on
+#define LDR_HIGH 700 // upper limit/on
 #define LDR_LOW 600  // lower limit/off
 
 /*
@@ -100,7 +101,7 @@
 #endif
 
 #define NUNCHUK_I2C_ADDRESS 82
-#define NUNCHUK_TYPE "wireless" // or "wireless"
+#define NUNCHUK_TYPE "wireless" // "wireless" or "wired"
 
 #define FPM_2_MPH 0.0114
 #define WHEEL_CIRCUMFERENCE 2.0125
@@ -201,10 +202,11 @@ float currentMPH;
 
 short loopCount = 0;
 
-String logTitles[17] = {
+String logTitles[18] = {
   "Time",
   "Temperature",
   "Brightness",
+  "Lights",
   "Throttle Raw",
   "Throttle %",
   "Z-Button",
@@ -459,7 +461,7 @@ void setupLogFile() {
   if (logFile.size() == 0) {
     // newly created, add titles
     String title_str = "";
-    int titles_len = 17;
+    int titles_len = 18;
     for(int i = 0; i < titles_len;i++) {
       title_str += logTitles[i];
       if (i != (titles_len - 1)) {
@@ -865,6 +867,8 @@ void logData(boolean toSerial) {
   dataString += String(theTemp);        // the temp outside
   dataString += String(",");
   dataString += String(LDRReading);     // brightness outside
+  dataString += String(",");
+  dataString += String(isLightsOn);     // lights on/off state
   dataString += String(",");
   dataString += String(nunchukInfo[0]); // throttle
   dataString += String(",");
