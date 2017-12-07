@@ -834,7 +834,7 @@ void motorInfo(float(&motorArr)[6], int whichMotor) {
   currRPM = mapf(throttlePercentage, 0, 100, 0, maxRPM);
   motorArr[4] = currRPM;
 
-  // current torque
+  // current torque (uses Attopilot amperage readings)
   double currTorque = 0.0;
   currTorque = apAFinal * MOTOR_OZIN_2_AMP;
   motorArr[5] = currTorque; 
@@ -856,13 +856,19 @@ String getTemp() {
   Wire.requestFrom(DS3231_I2C_ADDR, 1);
   temp_msb = Wire.read();
 
-  double tmp = (temp_msb * 1.8) + 28;
+  // for readings in C just use temp_msb
+  double tmp = (temp_msb * 1.8) + 32;
   temp = String(tmp);
-  // temp = (temp_msb * 1.8) + 28;
   return temp;
 }
 
-
+/*
+    Function logData(boolean);
+    Prints log data to SD Card
+    boolean toSerial will log
+    data over serial connection
+    if true.
+*/
 void logData(boolean toSerial) {
   String dataString = "";
 
