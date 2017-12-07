@@ -74,8 +74,12 @@
 #define DS3231_I2C_ADDR 0x68
 #define DS3231_TEMP_MSB 0x11
 
-#define OLED_RESET 3
-
+/*
+   Sabertooth ESC settings
+   Can be changed if changed
+   in the DEScribe software
+   from dimensionengineering
+*/
 #define ST_ESC_BAUDRATE 19200
 
 /*
@@ -127,7 +131,7 @@
 #define MOTOR_TOOTH_COUNT 12
 #define WHEEL_TOOTH_COUNT 64
 
-Adafruit_SSD1306 display(OLED_RESET);
+Adafruit_SSD1306 display = Adafruit_SSD1306();
 
 Adafruit_NeoPixel frnt_lights = Adafruit_NeoPixel(7, NEOPIXEL_FRNT, NEO_GRBW + NEO_KHZ800);
 Adafruit_NeoPixel rear_lights = Adafruit_NeoPixel(7, NEOPIXEL_BACK, NEO_GRBW + NEO_KHZ800);
@@ -338,11 +342,11 @@ void showSplash(int holdup) {
    hardware or not.
 */
 void preflightChecks() {
-  // check if SD Card is connected;
-  checkSDCard();
-
   // check if RTC is present;
   checkRTC();
+  
+  // check if SD Card is connected;
+  checkSDCard();
 
   // check if Nunchuk is connected;
   checkNunchuk(true);
