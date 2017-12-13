@@ -29,11 +29,11 @@
    NeoPixel pin settings
 */
 #ifdef _VARIANT_ARDUINO_STM32_
-#define NEOPIXEL_FRNT PB5
-#define NEOPIXEL_BACK PB4
+#define NEOPIXEL_BACK PB5
+#define NEOPIXEL_FRNT PB4
 #else
-#define NEOPIXEL_FRNT 13
-#define NEOPIXEL_BACK 10
+#define NEOPIXEL_BACK 13
+#define NEOPIXEL_FRNT 10
 #endif
 
 /*
@@ -166,6 +166,7 @@ boolean killSwitch = true;
 // LDR Detection states
 boolean isDayTime = false;
 boolean isLightsOn = false;
+boolean isReverse = false;
 int LDRReading = 0;
 
 // OLED Button States
@@ -403,8 +404,8 @@ void reverseLights() {
   rear_lights.setPixelColor(0, rear_lights.Color(255,0,0,0));
   rear_lights.setPixelColor(1, rear_lights.Color(255,0,0,0));
   rear_lights.setPixelColor(2, rear_lights.Color(255,0,0,0));
-  rear_lights.setPixelColor(3, rear_lights.Color(0,0,0,255));
-  rear_lights.setPixelColor(4, rear_lights.Color(0,0,0,255));
+  rear_lights.setPixelColor(3, rear_lights.Color(0,0,0,127));
+  rear_lights.setPixelColor(4, rear_lights.Color(0,0,0,127));
   rear_lights.setPixelColor(5, rear_lights.Color(255,0,0,0));
   rear_lights.setPixelColor(6, rear_lights.Color(255,0,0,0));
   rear_lights.setPixelColor(7, rear_lights.Color(255,0,0,0));
@@ -573,6 +574,13 @@ void loop() {
 
   throttle = readChuk(NUNCHUK_TYPE);
   throttlePercentage = map(throttle, 0, 2047, 0, 100);
+
+  if (throttle < -10) {
+    isReverse = true;
+  } else {
+    isReverse = false;
+  }
+  
   nunchukInfo[0] = throttle;
   nunchukInfo[1] = throttlePercentage;
 
@@ -641,10 +649,10 @@ void readLDR() {
     isLightsOn = false;
   }
 
-  if(isLightsOn && throttle < 0) {
+  if(isLightsOn && isReverse) {
     // reverse lights
     reverseLights();
-  } else {
+  } else if (isLightsOn && !isReverse) {
     // non-reverse
     rearLights(rear_lights.Color(255,0,0,0), 127);
   }
