@@ -133,8 +133,8 @@
 
 Adafruit_SSD1306 display = Adafruit_SSD1306();
 
-Adafruit_NeoPixel frnt_lights = Adafruit_NeoPixel(7, NEOPIXEL_FRNT, NEO_GRBW + NEO_KHZ800);
-Adafruit_NeoPixel rear_lights = Adafruit_NeoPixel(7, NEOPIXEL_BACK, NEO_GRBW + NEO_KHZ800);
+Adafruit_NeoPixel frnt_lights = Adafruit_NeoPixel(8, NEOPIXEL_FRNT, NEO_GRBW + NEO_KHZ800);
+Adafruit_NeoPixel rear_lights = Adafruit_NeoPixel(8, NEOPIXEL_BACK, NEO_GRBW + NEO_KHZ800);
 
 USBSabertoothSerial C;
 USBSabertooth ST(C, 128);
@@ -398,6 +398,19 @@ void rearLights(uint32_t color, uint16_t brightness) {
   }
 }
 
+void reverseLights() {
+  rear_lights.setBrightness(127);
+  rear_lights.setPixelColor(0, rear_lights.Color(255,0,0,0));
+  rear_lights.setPixelColor(1, rear_lights.Color(255,0,0,0));
+  rear_lights.setPixelColor(2, rear_lights.Color(255,0,0,0));
+  rear_lights.setPixelColor(3, rear_lights.Color(0,0,0,255));
+  rear_lights.setPixelColor(4, rear_lights.Color(0,0,0,255));
+  rear_lights.setPixelColor(5, rear_lights.Color(255,0,0,0));
+  rear_lights.setPixelColor(6, rear_lights.Color(255,0,0,0));
+  rear_lights.setPixelColor(7, rear_lights.Color(255,0,0,0));
+  rear_lights.show();
+}
+
 /*
    checkNunchuk Function
    checks for Wii Nunchuk presence.
@@ -626,6 +639,14 @@ void readLDR() {
   } else if (isDayTime && isLightsOn) {
     lightsOff();
     isLightsOn = false;
+  }
+
+  if(isLightsOn && throttle < 0) {
+    // reverse lights
+    reverseLights();
+  } else {
+    // non-reverse
+    rearLights(rear_lights.Color(255,0,0,0), 127);
   }
 }
 
