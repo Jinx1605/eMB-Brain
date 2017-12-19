@@ -1,32 +1,81 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Gearing Calculator</title>
+    
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
   </head>
   <body>
     
-    <form id="gearing_calc">
-      Wheel Circumference: (In Feet)<br>
-      <input id="wheel_circumference" type="text" value="2.0125"><br>
-      Motor RPM per Volt:<br>
-      <select id="rpm_per_volt">
-        <option value="269">Ampflow A23-150 (269)</option>
-        <option value="257">Ampflow A28-150 (257)</option>
-        <option value="287">Ampflow F30-150 (287)</option>
-        <option value="237">Ampflow E30-150 (237)</option>
-      </select><br>
-      Battery Voltage:<br>
-      <input id="battery_voltage" type="text" value="28.8"><br>
-      Motor Tooth Count:<br>
-      <input id="motor_tooth_count" type="text" value="12"><br>
-      Wheel Tooth Count:<br>
-      <input id="wheel_tooth_count" type="text" value="64"><br>
-      Estimated MPH:<br>
-      <input id="estimated_mph" type="text" value="">
-    </form>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+          <h4>Gearing and Speed Calculator</h4>
+        </div>
+        <div class="col-md-3"></div>
+      </div>
+      <div class="row">
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+          <form id="gearing_calc">
+            <div class="form-group">
+              <label>Wheel Circumference: (In Feet)</label>
+              <div class="input-group input-group-sm">
+                <input class="form-control form-control-sm" id="wheel_circumference" type="text" value="2.0125">
+                <span class="input-group-addon">Feet</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Motor RPM per Volt:</label>
+              <div class="input-group input-group-sm">
+                <select class="form-control form-control-sm" id="rpm_per_volt">
+                  <option value="269">Ampflow A23-150 (269)</option>
+                  <option value="257">Ampflow A28-150 (257)</option>
+                  <option value="287">Ampflow F30-150 (287)</option>
+                  <option value="237">Ampflow E30-150 (237)</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Battery Voltage:</label>
+              <div class="input-group input-group-sm">
+                <input class="form-control form-control-sm" id="battery_voltage" type="text" value="28.8">
+                <span class="input-group-addon">Volts</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Motor Tooth Count:</label>
+              <div class="input-group input-group-sm">
+                <input class="form-control form-control-sm" id="motor_tooth_count" type="text" value="12">
+                <span class="input-group-addon">Teeth</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Wheel Tooth Count:</label>
+              <div class="input-group input-group-sm">
+                <input class="form-control form-control-sm" id="wheel_tooth_count" type="text" value="64">
+                <span class="input-group-addon">Teeth</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Estimated MPH:</label>
+              <div class="input-group input-group-sm">
+                <input class="form-control form-control-sm" id="estimated_mph" type="text" value="">
+                <span class="input-group-addon">Mph</span>
+              </div>
+            </div>      
+          </form>
+        </div>
+        <div class="col-md-3"></div>
+      </div>
+    </div>
     
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
     <script type="application/javascript">
       var fpm_2_mph = 0.0114;
       var reduction_ratio,
