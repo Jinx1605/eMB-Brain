@@ -292,10 +292,6 @@ void loop(){
   
   createRadioPacket();
 
-  if(!joystiq_connected) {
-    oledPrint("Remote Not Found!", 0);
-  }
-    
   if (rf69_manager.sendtoWait((uint8_t *)radiopacket, strlen(radiopacket), DEST_ADDRESS)) {
     // Now wait for a reply from the server
     uint8_t len = sizeof(buf);
@@ -315,12 +311,16 @@ void loop(){
       oled.print("RSSI: "); oled.print(rf69.lastRssi());
       oled.display(); 
       
-    } else {
-      killswitch(true);
     }
     
   } else {
     killswitch(true);
+  }
+
+  if(joystiq_connected) {
+    // do stuff !!
+  } else {
+    oledPrint("Remote Not Found!", 0);
   }
 
 }
