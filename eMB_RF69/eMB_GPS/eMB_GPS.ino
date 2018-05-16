@@ -90,6 +90,30 @@ Adafruit_SSD1306 oled = Adafruit_SSD1306();
 #define SD_CHIP_SELECT 4
 File logFile;
 
+/************ Radio Setup ***************/
+// Where to send packets to!
+#define DEST_ADDRESS   2
+// change addresses for each client board, any number :)
+#define MY_ADDRESS     1
+// Change to 434.0 or other frequency, must match RX's freq!
+#define RF69_FREQ 915.0
+
+#define RFM69_CS      10   // "B"
+#define RFM69_RST     11   // "A"
+#define RFM69_IRQ     6    // "D"
+#define RFM69_INT    digitalPinToInterrupt(RFM69_IRQ)
+
+// Singleton instance of the radio driver
+RH_RF69 rf69(RFM69_CS, RFM69_INT);
+
+// Class to manage message delivery and receipt, using the driver declared above
+RHReliableDatagram rf69_manager(rf69, MY_ADDRESS);
+
+// Dont put this on the stack:
+uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
+uint8_t data[] = "";
+char radiopacket[RH_RF69_MAX_MESSAGE_LEN] = "time";
+
 /************ ESC Setup ***************/
 #define ST_ESC_BAUDRATE 19200
 //USBSabertoothSerial C;
@@ -223,9 +247,10 @@ void setupGPS() {
 }
 
 void parseGPS() {
-  unsigned int hr = GPS.hour;
-  unsigned int mn = GPS.minute;
+  int hr = GPS.hour;
+  int mn = GPS.minute;
   unsigned int sc = GPS.seconds;
+  unsigned int nDay = GPS.day;
   String tMn = "";
   String tSc = "";
   String ampm = "";
@@ -247,8 +272,10 @@ void parseGPS() {
   } else {
     if (hr < 0) {
       hr = hr + 24;
+      nDay = nDay - 1;
     }
   }
+
   if (hr >= 13) {
     hr = hr - 12;
     ampm = " pm";
@@ -273,7 +300,12 @@ void parseGPS() {
   }
 
   gps_data[0] = "";
-  gps_data[0] += hr;
+  if(hr <= 9) {
+    gps_data[0] += "0";
+    gps_data[0] += hr;
+  } else {
+    gps_data[0] += hr;
+  }
   gps_data[0] += ':';
   gps_data[0] += tMn;
   gps_data[0] += ':';
@@ -282,7 +314,7 @@ void parseGPS() {
 
   gps_data[1] = GPS.month;
   gps_data[1] += "-";
-  gps_data[1] += GPS.day;
+  gps_data[1] += nDay;
   gps_data[1] += "-";
   gps_data[1] += GPS.year;
 
@@ -380,6 +412,40 @@ void setupLogFile() {
   }
 }
 
+void setupRadio() {
+  pinMode(RFM69_RST, OUTPUT);
+  digitalWrite(RFM69_RST, LOW);
+
+  // manual reset
+  digitalWrite(RFM69_RST, HIGH);
+  delay(10);
+  digitalWrite(RFM69_RST, LOW);
+  delay(10);
+  
+  if (!rf69_manager.init()) {
+    oledPrint("RFM69 radio init failed",500);
+    while (1);
+  }
+  oledPrint("RFM69 radio init OK!",500);
+  
+  // Defaults after init are 434.0MHz, modulation GFSK_Rb250Fd250, +13dbM (for low power module)
+  // No encryption
+  if (!rf69.setFrequency(RF69_FREQ)) {
+    oledPrint("setFrequency failed",500);
+  }
+
+  // If you are using a high power RF69 eg RFM69HW, you *must* set a Tx power with the
+  // ishighpowermodule flag set like this:
+  rf69.setTxPower(20, true);  // range from 14-20 for power, 2nd arg must be true for 69HCW
+
+  // The encryption key has to be the same as the one in the server
+  uint8_t key[] = { 0x01, 0x06, 0x00, 0x05, 0x01, 0x06, 0x00, 0x05,
+                    0x01, 0x06, 0x00, 0x05, 0x01, 0x06, 0x00, 0x05};
+  rf69.setEncryptionKey(key);
+  
+  preflightChecks[5] = true;
+}
+
 void loop() {
   
   readGPS();
@@ -391,22 +457,45 @@ void loop() {
   if (millis() - timer > 1000) {
     timer = millis(); // reset the timer
     sprintGPS();
+    pfChecks();
+  }
+  
+}
 
-    // Setup SD
-    if (preflightChecks[2] && !preflightChecks[3]) {
-      setupSD();
+void pfChecks() {
+
+//boolean preflightChecks[8] = {
+//  false, // OLED 
+//  false, // GPS 
+//  false, // TIME
+//  false, // SD
+//  false, // LOGFILE
+//  false, // RADIO
+//  false, // R MOTOR TEMP
+//  false // L MOTOR TEMP
+//};
+  
+  // Setup SD
+  if (preflightChecks[2] && !preflightChecks[3]) {
+    setupSD();
+  }
+
+  // Setup Datalogger
+  if (preflightChecks[3] && !preflightChecks[4]) {
+    setupLogFile();
+  }
+
+  // Setup Radio
+  if (preflightChecks[2] && preflightChecks[3] && preflightChecks[4]) {
+    if (!preflightChecks[5]) {
+      setupRadio();
     }
+    
+  }
 
-    // Setup Datalogger
-    if (preflightChecks[3] && !preflightChecks[4]) {
-      setupLogFile();
-    }
-
-    // time setup from sat
-    if (preflightChecks[2] && preflightChecks[3] && preflightChecks[4]) { 
-      oledPrint(gps_data[0], 0);
-    }
-
+  // Setup motor temps.
+  if (preflightChecks[2] && preflightChecks[3] && preflightChecks[4] && preflightChecks[5]) { 
+    oledPrint(gps_data[0], 0);
   }
   
 }
@@ -431,6 +520,7 @@ void readGPS(){
 
 void sprintGPS() {
   Serial.print("\nTime: ");
+  Serial.print(GPS.hour, DEC); Serial.print(" : ");
   Serial.println(gps_data[0]);
   Serial.print("Date: ");
   Serial.println(gps_data[1]);
