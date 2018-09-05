@@ -22,6 +22,19 @@ struct MotorInfo {
 MotorInfo left_motor  = {"Left Motor" , 7, 00.00, 00.00};
 MotorInfo right_motor = {"Right Motor", 1, 00.00, 00.00};
 
+String format_time(int hr, int mn, int sx, int tzd){
+  String theTime = "";
+  String hur  = ((hr + tzd) > 12 ) ? String((hr + tzd) - 12 ) : String(hr + tzd);
+  //String ampm = (int(hur) > 12 ) ? "pm" : "am";
+  String min  = (mn < 10) ? "0" + String(mn) : String(mn);
+  String sec  = (sx < 10) ? "0" + String(sx) : String(sx);
+  theTime += hur;
+  theTime += min;
+  theTime += sec;
+  //theTime += " " + ampm;
+  return theTime;
+}
+
 void tcaselect(uint8_t i) {
   if (i > 7) return;
   Wire.beginTransmission(TCAADDR);
@@ -47,7 +60,7 @@ void loop() {
   
 }
 
-void init_motor(MotorInfo side) {
+void init_motor (MotorInfo side) {
   init_display(side.tcaport, "Left Sensor Init.");
   init_mlx(side);
 }
