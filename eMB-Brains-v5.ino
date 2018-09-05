@@ -1,5 +1,12 @@
 /*************************************************** 
-  eMB Brains v4 - Dual Multiplexed Temp Monitor
+  eMB Brains v5 - I2C Gone Nanners!!
+
+  - Dual Multiplexed Temp Monitor -
+    1x TCA9548A I2C Multiplexer
+    2x MLX90614 I2C Temp sensors
+    2x 128x32 I2C OLED Displays
+
+  
  ****************************************************/
 
 #include <Wire.h>
