@@ -6,6 +6,8 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 
+// OakOLED Library.
+// modified to use zio 128x32 Qwiic oleds..
 #include "OakOLED.h"
 OakOLED display;
 
@@ -15,10 +17,14 @@ OakOLED display;
 
 #define TCAADDR 0x70
 
-double r_a_temp;
-double r_o_temp;
-double l_a_temp;
-double l_o_temp;
+struct MotorTemp {
+  int    tcaport;
+  double ambient;
+  double object;
+};
+
+MotorTemp left_temp = {7, 00.00, 00.00};
+MotorTemp right_temp = {1, 00.00, 00.00};
 
 void tcaselect(uint8_t i) {
   if (i > 7) return;
@@ -32,11 +38,11 @@ void setup() {
   Serial.begin(9600);
   //while (!Serial);
 
-  init_display(7, "Left Sensor Init.");
-  init_display(1, "Right Sensor Init.");
+  init_display(left_temp.tcaport, "Left Sensor Init.");
+  init_display(right_temp.tcaport, "Right Sensor Init.");
   
   /* Initialise the left sensor */
-  if (!MLX90614_begin(7)) {
+  if (!MLX90614_begin(left_temp.tcaport)) {
     Serial.println("Left Temp Sensor not found!");
     display.clearDisplay();
     display.setTextSize(2);
@@ -50,7 +56,7 @@ void setup() {
   }
   
   /* Initialise the right sensor */
-  if (!MLX90614_begin(1)) {
+  if (!MLX90614_begin(right_temp.tcaport)) {
     Serial.println("Right Temp Sensor not found!");
     display.clearDisplay();
     display.setTextSize(2);
@@ -66,15 +72,29 @@ void setup() {
 }
 
 void loop() {
-  
-  tcaselect(7);
-  l_a_temp = readAmbientTempF();
-  l_o_temp = readObjectTempF();
-  Serial.print("Left Ambient = "); Serial.print(l_a_temp); 
-  Serial.print("*F\tLeft Object = "); Serial.print(l_o_temp); Serial.println("*F");
+
+  collect_temps(left_temp);
+  collect_temps(right_temp);
+  /*
+  tcaselect(left_temp.tcaport);
+  left_temp.ambient = readAmbientTempF();
+  left_temp.object = readObjectTempF();
+  Serial.print("Left Ambient = "); Serial.print(left_temp.ambient); 
+  Serial.print("*F\tLeft Object = "); Serial.print(left_temp.object); Serial.println("*F");
   Serial.println();
-  display_temp(String(l_a_temp), String(l_o_temp));
+  display_temp(String(left_temp.ambient), String(left_temp.object));
+
+  tcaselect(right_temp.tcaport);
+  right_temp.ambient = readAmbientTempF();
+  right_temp.object = readObjectTempF();
+  Serial.print("Right Ambient = "); Serial.print(right_temp.ambient); 
+  Serial.print("*F\tRight Object = "); Serial.print(right_temp.object); Serial.println("*F");
+  Serial.println();
+  display_temp(String(right_temp.ambient), String(right_temp.object));
   
+  */
+  
+  /*
   tcaselect(1);
   r_a_temp = readAmbientTempF();
   r_o_temp = readObjectTempF();
@@ -82,9 +102,19 @@ void loop() {
   Serial.print("*F\tRight Object = "); Serial.print(r_o_temp); Serial.println("*F");
   Serial.println();
   display_temp( String(r_a_temp), String(r_o_temp));
-  
+  */
   delay(250);
   //display_temps();
+}
+
+void collect_temps (MotorTemp side) {
+  tcaselect(side.tcaport);
+  side.ambient = readAmbientTempF();
+  side.object = readObjectTempF();
+  Serial.print("Ambient = "); Serial.print(side.ambient); 
+  Serial.print("*F\tObject = "); Serial.print(side.object); Serial.println("*F");
+  Serial.println();
+  display_temp(String(side.ambient), String(side.object));
 }
 
 void init_display(uint8_t i, String txt) {
