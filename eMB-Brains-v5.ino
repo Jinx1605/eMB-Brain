@@ -25,13 +25,13 @@ MotorInfo right_motor = {"Right Motor", 1, 00.00, 00.00};
 String format_time(int hr, int mn, int sx, int tzd){
   String theTime = "";
   String hur  = ((hr + tzd) > 12 ) ? String((hr + tzd) - 12 ) : String(hr + tzd);
-  //String ampm = (int(hur) > 12 ) ? "pm" : "am";
+  String ampm = ((hr + tzd) > 12 ) ? "pm" : "am";
   String min  = (mn < 10) ? "0" + String(mn) : String(mn);
   String sec  = (sx < 10) ? "0" + String(sx) : String(sx);
   theTime += hur;
   theTime += min;
   theTime += sec;
-  //theTime += " " + ampm;
+  theTime += " " + ampm;
   return theTime;
 }
 
