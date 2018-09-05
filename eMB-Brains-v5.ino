@@ -2,7 +2,6 @@
   eMB Brains v4 - Dual Multiplexed Temp Monitor
  ****************************************************/
 
-#include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 
@@ -10,10 +9,6 @@
 // modified to use zio 128x32 Qwiic oleds..
 #include "OakOLED.h"
 OakOLED display;
-
-// #include <Adafruit_SSD1306.h>
-// #define OLED_RESET 4
-// Adafruit_SSD1306 display(OLED_RESET);
 
 #define TCAADDR 0x70
 
@@ -39,11 +34,8 @@ void setup() {
   Serial.begin(9600);
   //while (!Serial);
 
-  init_display(left_motor.tcaport, "Left Sensor Init.");
-  init_mlx(left_motor);
-  
-  init_display(right_motor.tcaport, "Right Sensor Init.");
-  init_mlx(right_motor);
+  init_motor(left_motor);
+  init_motor(right_motor);
   
 }
 
@@ -55,12 +47,15 @@ void loop() {
   
 }
 
+void init_motor(MotorInfo side) {
+  init_display(side.tcaport, "Left Sensor Init.");
+  init_mlx(side);
+}
+
 void init_mlx (MotorInfo side) {
     if (!MLX90614_begin(side.tcaport)) {
     Serial.print(side.name + " Temp Sensor not found!");
     display.clearDisplay();
-    display.setTextSize(2);
-    //display.setTextColor(WHITE);
     display.setCursor(0,0);
     display.print(side.name + " Sensor Init Failed");
     display.display();
@@ -78,7 +73,6 @@ void init_display(uint8_t i, String txt) {
   // Clear the buffer.
   display.clearDisplay();
   display.setTextSize(2);
-  //display.setTextColor(WHITE);
   display.setCursor(0,0);
   display.print(txt);
   display.display();
@@ -99,8 +93,6 @@ void display_motor_temps(MotorInfo side) {
   Serial.println();
   
   display.clearDisplay();
-  display.setTextSize(2);
-  //display.setTextColor(WHITE);
   display.setCursor(0,0);
   display.print("A:" + String(side.ambient) + " F");
   display.setCursor(0,16);
