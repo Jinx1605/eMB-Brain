@@ -17,14 +17,15 @@ OakOLED display;
 
 #define TCAADDR 0x70
 
-struct MotorTemp {
+struct MotorInfo {
+  String name;
   int    tcaport;
   double ambient;
   double object;
 };
 
-MotorTemp left_temp = {7, 00.00, 00.00};
-MotorTemp right_temp = {1, 00.00, 00.00};
+MotorInfo left_motor  = {"Left Motor" , 7, 00.00, 00.00};
+MotorInfo right_motor = {"Right Motor", 1, 00.00, 00.00};
 
 void tcaselect(uint8_t i) {
   if (i > 7) return;
@@ -38,83 +39,35 @@ void setup() {
   Serial.begin(9600);
   //while (!Serial);
 
-  init_display(left_temp.tcaport, "Left Sensor Init.");
-  init_display(right_temp.tcaport, "Right Sensor Init.");
+  init_display(left_motor.tcaport, "Left Sensor Init.");
+  init_mlx(left_motor);
   
-  /* Initialise the left sensor */
-  if (!MLX90614_begin(left_temp.tcaport)) {
-    Serial.println("Left Temp Sensor not found!");
-    display.clearDisplay();
-    display.setTextSize(2);
-    //display.setTextColor(WHITE);
-    display.setCursor(0,0);
-    display.print("Left Sensor Init Failed");
-    display.display();
-    while(1);
-  } else {
-    Serial.println("Left Temp Sensor init passed!");
-  }
-  
-  /* Initialise the right sensor */
-  if (!MLX90614_begin(right_temp.tcaport)) {
-    Serial.println("Right Temp Sensor not found!");
-    display.clearDisplay();
-    display.setTextSize(2);
-    //display.setTextColor(WHITE);
-    display.setCursor(0,0);
-    display.print("Right Sensor Init Failed");
-    display.display();
-    while(1);
-  } else {
-    Serial.println("Right Temp Sensor init passed!");
-  }
+  init_display(right_motor.tcaport, "Right Sensor Init.");
+  init_mlx(right_motor);
   
 }
 
 void loop() {
 
-  collect_temps(left_temp);
-  collect_temps(right_temp);
-  /*
-  tcaselect(left_temp.tcaport);
-  left_temp.ambient = readAmbientTempF();
-  left_temp.object = readObjectTempF();
-  Serial.print("Left Ambient = "); Serial.print(left_temp.ambient); 
-  Serial.print("*F\tLeft Object = "); Serial.print(left_temp.object); Serial.println("*F");
-  Serial.println();
-  display_temp(String(left_temp.ambient), String(left_temp.object));
-
-  tcaselect(right_temp.tcaport);
-  right_temp.ambient = readAmbientTempF();
-  right_temp.object = readObjectTempF();
-  Serial.print("Right Ambient = "); Serial.print(right_temp.ambient); 
-  Serial.print("*F\tRight Object = "); Serial.print(right_temp.object); Serial.println("*F");
-  Serial.println();
-  display_temp(String(right_temp.ambient), String(right_temp.object));
-  
-  */
-  
-  /*
-  tcaselect(1);
-  r_a_temp = readAmbientTempF();
-  r_o_temp = readObjectTempF();
-  Serial.print("Right Ambient = "); Serial.print(r_a_temp); 
-  Serial.print("*F\tRight Object = "); Serial.print(r_o_temp); Serial.println("*F");
-  Serial.println();
-  display_temp( String(r_a_temp), String(r_o_temp));
-  */
+  collect_motor_temps(left_motor);
+  collect_motor_temps(right_motor);
   delay(250);
-  //display_temps();
+  
 }
 
-void collect_temps (MotorTemp side) {
-  tcaselect(side.tcaport);
-  side.ambient = readAmbientTempF();
-  side.object = readObjectTempF();
-  Serial.print("Ambient = "); Serial.print(side.ambient); 
-  Serial.print("*F\tObject = "); Serial.print(side.object); Serial.println("*F");
-  Serial.println();
-  display_temp(String(side.ambient), String(side.object));
+void init_mlx (MotorInfo side) {
+    if (!MLX90614_begin(side.tcaport)) {
+    Serial.print(side.name + " Temp Sensor not found!");
+    display.clearDisplay();
+    display.setTextSize(2);
+    //display.setTextColor(WHITE);
+    display.setCursor(0,0);
+    display.print(side.name + " Sensor Init Failed");
+    display.display();
+    while(1);
+  } else {
+    Serial.println(side.name + " Left Sensor init passed!");
+  }
 }
 
 void init_display(uint8_t i, String txt) {
@@ -133,14 +86,25 @@ void init_display(uint8_t i, String txt) {
   // init done
 }
 
-void display_temp(String ambient_temp, String object_temp) {
+void collect_motor_temps (MotorInfo side) {
+  tcaselect(side.tcaport);
+  side.ambient = readAmbientTempF();
+  side.object = readObjectTempF();
+  display_motor_temps(side);
+}
+
+void display_motor_temps(MotorInfo side) {
+  Serial.print(side.name + " Ambient = "); Serial.print(side.ambient); 
+  Serial.print("*F\t" + side.name +" = "); Serial.print(side.object); Serial.println("*F");
+  Serial.println();
+  
   display.clearDisplay();
   display.setTextSize(2);
   //display.setTextColor(WHITE);
   display.setCursor(0,0);
-  display.print("A:" + ambient_temp + " F");
+  display.print("A:" + String(side.ambient) + " F");
   display.setCursor(0,16);
-  display.println("M:" + object_temp + " F");
+  display.println("M:" + String(side.object) + " F");
   display.display();
 }
 
