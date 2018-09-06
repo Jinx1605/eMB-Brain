@@ -23,6 +23,11 @@ I2CGPS myI2CGPS;
 #include <TinyGPS++.h> //From: https://github.com/mikalhart/TinyGPSPlus
 TinyGPSPlus gps; //Declare gps object
 
+#include <Sparkfun_APDS9301_Library.h>
+APDS9301 apds;
+uint8_t lux_val = 0;
+
+
 #define TCAADDR 0x70
 
 struct MotorInfo {
@@ -37,23 +42,41 @@ MotorInfo right_motor = {"Right Motor", 1, 00.00, 00.00};
 
 
 struct GPSData {
-  String time;
-  String date;
-  double lat;
-  double lng;
+  String  time;
+  String  date;
+  uint8_t lux;
+  uint8_t sats;
+  double  lat;
+  double  lng;
+  uint8_t deg;
+  String  card;
+  double  mph;
+  double  kmh;
 };
 
 GPSData gData = {
   "",   // time
   "",   // date
+  0,    // lux
+  0,    // sats
   0.00, // lat
-  0.00  // long
+  0.00, // long
+  0,    // deg
+  "",   // card
+  0.00, // mph
+  0.00 // kmph
+  
 };
 
 String format_time(int hr, int mn, int sx, int tzd){
   String theTime = "";
-  String hur  = ((hr + tzd) > 12 ) ? String((hr + tzd) - 12 ) : String(hr + tzd);
-  String ampm = ((hr + tzd) > 12 ) ? "pm" : "am";
+  int hour = hr + tzd;
+  hour = (hour > 12) ? (hour - 12) : hour;
+  String ampm = (hour >= 12 ) ? "pm" : "am";
+  hour = (hour == 0) ? 12 : hour;
+  // hour  = (hour <= 0) ? hour + 12 : hour;
+  // if (hour <= 0) { hour = hour + 12; ampm = "pm"; };
+  String hur  = String(hour);
   String min  = (mn < 10) ? "0" + String(mn) : String(mn);
   String sec  = (sx < 10) ? "0" + String(sx) : String(sx);
   theTime += hur + ":";
@@ -97,6 +120,8 @@ void setup() {
     oled_print(right_motor, "Working!");
     Serial.println("GPS module found!");
   }
+
+  init_light_sensor();
   
 }
 
@@ -108,6 +133,7 @@ void loop() {
 
   collect_motor_temps(left_motor);
   collect_motor_temps(right_motor);
+  lux_val = read_light_sensor();
   
   //Check to see if new GPS info is available
   if (gps.time.isUpdated()) {
@@ -121,16 +147,53 @@ void loop() {
 void process_gps(GPSData data){
   data.time = format_time(gps.time.hour(),gps.time.minute(),gps.time.second(),-4);
   data.date = format_date(gps.date.month(), gps.date.day(), gps.date.year());
+  data.lux  = lux_val;
+  data.sats = gps.satellites.value();
   data.lat  = gps.location.lat();
-  data.lng  = gps.location.lng(); 
-  
+  data.lng  = gps.location.lng();
+  data.deg  = gps.course.deg();
+  data.card = TinyGPSPlus::cardinal(gps.course.deg());
+  data.mph  = gps.speed.mph();
+  data.kmh  = gps.speed.kmph();
+
   Serial.print(data.time + ",");
   Serial.print(data.date + ",");
+  Serial.print(data.lux);
+  Serial.print(",");
+  Serial.print(data.sats);
+  Serial.print(",");
   Serial.print(data.lat, 6);
   Serial.print(",");
   Serial.print(data.lng, 6);
   Serial.print(",");
+  Serial.print(data.deg);
+  Serial.print(",");
+  Serial.print(data.card + ",");
+  Serial.print(data.mph);
+  //Serial.print(",");
+  
   Serial.println();
+}
+
+void init_light_sensor(){
+  delay(5);
+  // APDS9301 sensor setup.
+  apds.begin(0x39);
+  apds.setGain(APDS9301::LOW_GAIN);
+
+  apds.setIntegrationTime(APDS9301::INT_TIME_13_7_MS);
+  apds.setLowThreshold(0);
+  apds.setHighThreshold(500);
+  apds.setCyclesForInterrupt(1);
+  apds.enableInterrupt(APDS9301::INT_ON);
+  apds.clearIntFlag();
+
+  //Serial.println(apds.getLowThreshold());
+  //Serial.println(apds.getHighThreshold());
+}
+
+uint8_t read_light_sensor() {
+  return apds.readCH0Level();
 }
 
 void init_motor (MotorInfo side) {
@@ -174,8 +237,8 @@ void collect_motor_temps (MotorInfo side) {
 }
 
 void display_motor_temps(MotorInfo side) {
-  Serial.print(side.name + " Ambient = "); Serial.print(side.ambient); 
-  Serial.print("*F\t" + side.name +" = "); Serial.print(side.object); Serial.println("*F");
+  //Serial.print(side.name + " Ambient = "); Serial.print(side.ambient); 
+  //Serial.print("*F\t" + side.name +" = "); Serial.print(side.object); Serial.println("*F");
   //Serial.println();
   
   display.clearDisplay();
