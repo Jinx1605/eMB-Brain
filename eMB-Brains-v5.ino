@@ -27,6 +27,13 @@ TinyGPSPlus gps; //Declare gps object
 APDS9301 apds;
 uint8_t lux_val = 0;
 
+#include "Qwiic_LED_Stick.h"
+LED BackLED; //Create an object of the LED class
+
+byte redArray[10]   = {255, 255, 255, 255, 255, 255, 255, 255, 255, 255}; //r
+byte greenArray[10] = {  0,   0,   0,   0,   0,   0,   0,   0,   0,   0}; //g
+byte blueArray[10]  = {  0,   0,   0,   0,   0,   0,   0,   0,   0,   0}; //b
+
 
 #define TCAADDR 0x70
 
@@ -74,8 +81,8 @@ String format_time(int hr, int mn, int sx, int tzd){
   hour = (hour > 12) ? (hour - 12) : hour;
   String ampm = (hour >= 12 ) ? "pm" : "am";
   hour = (hour == 0) ? 12 : hour;
-  // hour  = (hour <= 0) ? hour + 12 : hour;
-  // if (hour <= 0) { hour = hour + 12; ampm = "pm"; };
+  if (hour < 0) { ampm = "pm"; };
+  hour  = (hour <= 0) ? hour + 12 : hour;
   String hur  = String(hour);
   String min  = (mn < 10) ? "0" + String(mn) : String(mn);
   String sec  = (sx < 10) ? "0" + String(sx) : String(sx);
@@ -123,6 +130,9 @@ void setup() {
 
   init_light_sensor();
   
+  BackLED.begin();
+  BackLED.setLEDBrightness(2);
+  BackLED.setLEDColor(redArray, greenArray, blueArray, 10);
 }
 
 void loop() {
