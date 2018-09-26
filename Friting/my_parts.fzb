@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module fritzingVersion="0.9.3b.04.19.5c895d327c44a3114e5fcc9d8260daf0cbb52806" icon="Mine.png">
+    <title>My Parts</title>
+    <instances>
+        <instance moduleIdRef="adafruit ItsyBitsy Mx Express_2e834af99303cefe185905ea4dc15aab_1" modelIndex="85436717" path="C:/Users/Harold/Documents/Fritzing/parts/user/adafruit ItsyBitsy Mx Express_2e834af99303cefe185905ea4dc15aab_1.fzp">
+            <views/>
+        </instance>
+        <instance moduleIdRef="mine_305fe56887497dbc7d10d9c7442ae6e2_1" modelIndex="85438875" path="C:/Users/Harold/Documents/Fritzing/parts/user/mine_305fe56887497dbc7d10d9c7442ae6e2_1.fzp" flippedSMD="true">
+            <property name="flippedSMD" value="true"/>
+            <views/>
+        </instance>
+        <instance moduleIdRef="rfm69hcw_334af668c9fd7a01f6586d1d03f3c187_1" modelIndex="85438878" path="C:/Users/Harold/Documents/Fritzing/parts/user/rfm69hcw_334af668c9fd7a01f6586d1d03f3c187_1.fzp" flippedSMD="true">
+            <views/>
+        </instance>
+    </instances>
+</module>
