@@ -4,9 +4,10 @@
 #include <RHReliableDatagram.h>
 #include <RH_RF69.h>
 
+#define VBATPIN       A7
 
-#define VERT          1
-#define HORZ          0
+#define VERT          A1
+#define HORZ          A0
 #define JBTN          11
 #define ZBTN          12
 #define CBTN          13
@@ -30,8 +31,14 @@ RHReliableDatagram rf69_manager(rf69, MY_ADDRESS);
 uint8_t crypt_key[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
                         0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
 
-uint16_t vert_val, horz_val;
+// Dont put this on the stack:
+uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
+char data[] = "";
+char radiopacket[40] = "";
+
+int16_t vert_val, horz_val;
 boolean jbtn_val, zbtn_val, cbtn_val;
+float batt_voltage;
 
 
 void setup() {
@@ -43,6 +50,23 @@ void setup() {
   pinMode(ZBTN, INPUT_PULLUP);
   pinMode(CBTN, INPUT_PULLUP);
 
+  radio_init();
+  
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+  batt_voltage = measure_vbatt();
+  
+  // read all values from the joystick
+  read_joystick();
+  
+  // print out the values
+  serial_debug();
+}
+
+void radio_init() {
   // RFM69 Setup  
   pinMode(RFM69_RST, OUTPUT);
   digitalWrite(RFM69_RST, LOW);
@@ -68,27 +92,42 @@ void setup() {
   
   // set encryption
   rf69.setEncryptionKey(crypt_key);
-  
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
-  
-  // read all values from the joystick
+void read_joystick() {
   vert_val = analogRead(VERT); // will be 0-1023
+  vert_val = map(vert_val, 9, 1023, -2047, 2047); // map to forward and reverse
+  vert_val = constrain(vert_val, -2047, 2047);
+  
   horz_val = analogRead(HORZ); // will be 0-1023
-  jbtn_val = digitalRead(JBTN); // will be HIGH (1) if not pressed, and LOW (0) if pressed
-  
-  // print out the values
-  
-  Serial.print("vertical: ");
+  horz_val = map(horz_val, 2, 1003, -1023, 1033); // map to left and right
+  horz_val = constrain(horz_val, -1023, 1023);
+    
+  jbtn_val = !digitalRead(JBTN); // will be HIGH (1) if pressed, and LOW (0) if not pressed
+  zbtn_val = !digitalRead(ZBTN); // will be HIGH (1) if pressed, and LOW (0) if not pressed
+  cbtn_val = !digitalRead(CBTN); // will be HIGH (1) if pressed, and LOW (0) if not pressed
+
+}
+
+float measure_vbatt() {
+  float measuredvbat = analogRead(VBATPIN);
+  measuredvbat *= 2;    // we divided by 2, so multiply back
+  measuredvbat *= 3.3;  // Multiply by 3.3V, our reference voltage
+  measuredvbat /= 1024; // convert to voltage
+  return measuredvbat;
+}
+
+void serial_debug() {
+  Serial.print("VBat: " );
+  Serial.print(batt_voltage);
+  Serial.print("v Vert: ");
   Serial.print(vert_val,DEC);
-  Serial.print(" horizontal: ");
+  Serial.print(" Horz: ");
   Serial.print(horz_val,DEC);
-  Serial.print(" select: ");
-  if(jbtn_val){
-    Serial.println("not pressed");
-  } else {
-    Serial.println("PRESSED!");
-  }
+  Serial.print(" JBtn: ");
+  Serial.print(jbtn_val,DEC);
+  Serial.print(" ZBtn: ");
+  Serial.print(zbtn_val,DEC);
+  Serial.print(" CBtn: ");
+  Serial.println(cbtn_val,DEC);
 }
