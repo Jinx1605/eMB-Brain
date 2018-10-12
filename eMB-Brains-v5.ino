@@ -34,6 +34,10 @@ byte redArray[10]   = {255, 255, 255, 255, 255, 255, 255, 255, 255, 255}; //r
 byte greenArray[10] = {  0,   0,   0,   0,   0,   0,   0,   0,   0,   0}; //g
 byte blueArray[10]  = {  0,   0,   0,   0,   0,   0,   0,   0,   0,   0}; //b
 
+#if defined(__SAMD51__)
+
+#else
+// samd21 or other arduino
 #include <RHReliableDatagram.h>
 #include <RH_RF69.h>
 
@@ -48,9 +52,9 @@ byte blueArray[10]  = {  0,   0,   0,   0,   0,   0,   0,   0,   0,   0}; //b
 #define MY_ADDRESS    1
 
 // Singleton instance of the radio driver
-RH_RF69 rf69(RFM69_CS, RFM69_INT);
+//RH_RF69 rf69(RFM69_CS, RFM69_INT);
 // Class to manage message delivery and receipt, using the driver declared above
-RHReliableDatagram rf69_manager(rf69, MY_ADDRESS);
+//RHReliableDatagram rf69_manager(rf69, MY_ADDRESS);
 
 // The encryption key has to be the same as the one in the server
 uint8_t crypt_key[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
@@ -60,6 +64,7 @@ uint8_t crypt_key[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
 uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
 uint8_t data[] = "";
 char radiopacket[RH_RF69_MAX_MESSAGE_LEN] = "time";
+#endif
 
 boolean joystick_connected = false;
 int joystick_info[6] = {
@@ -111,6 +116,8 @@ GPSData gData = {
   
 };
 
+boolean enableDebug = true;
+
 String format_time(int hr, int mn, int sx, int tzd){
   String theTime = "";
   int hour = hr + tzd;
@@ -147,7 +154,7 @@ void tcaselect(uint8_t i) {
 
 void setup() {
   Wire.begin();
-  Serial.begin(9600);
+  Serial.begin(115200);
   //while (!Serial);
   
   delay(50);
@@ -169,10 +176,13 @@ void setup() {
   
   BackLED.begin();
   BackLED.setLEDBrightness(2);
-  BackLED.setLEDColor(redArray, greenArray, blueArray, 10);
-
+  BackLED.setLEDColor(255, 0, 0, 10);
+  #if defined(__SAMD51__)
+  
+  #else
+  // samd21 or arduino
   radio_init();
-
+  #endif
 }
 
 void loop() {
@@ -188,13 +198,18 @@ void loop() {
   //Check to see if new GPS info is available
   if (gps.time.isUpdated()) {
     // displayInfo();
-    process_gps(gData);
+    process_gps(gData, enableDebug);
   }
-
+  #if defined(__SAMD51__)
+  #else
   radio_read();
-  
+  #endif
 }
 
+#if defined(__SAMD51__)
+
+#else
+// samd21 or arduino
 void radio_init() {
   // RFM69 Setup  
   pinMode(RFM69_RST, OUTPUT);
@@ -286,9 +301,9 @@ void radio_read() {
     }
   }
 }
+#endif
 
-
-void process_gps(GPSData data){
+void process_gps(GPSData data, boolean debug) {
   data.time = format_time(gps.time.hour(),gps.time.minute(),gps.time.second(),-4);
   data.date = format_date(gps.date.month(), gps.date.day(), gps.date.year());
   data.lux  = lux_val;
@@ -300,6 +315,12 @@ void process_gps(GPSData data){
   data.mph  = gps.speed.mph();
   data.kmh  = gps.speed.kmph();
 
+  if (debug) {
+    sprint_gps_data(data);
+  }
+}
+
+void sprint_gps_data(GPSData data) {
   Serial.print(data.time + ",");
   Serial.print(data.date + ",");
   Serial.print(data.lux);
@@ -315,7 +336,6 @@ void process_gps(GPSData data){
   Serial.print(data.card + ",");
   Serial.print(data.mph);
   //Serial.print(",");
-  
   Serial.println();
 }
 
