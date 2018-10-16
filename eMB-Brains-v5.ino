@@ -8,7 +8,7 @@
 
   
  ****************************************************/
-
+#include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 
@@ -52,9 +52,9 @@ byte blueArray[10]  = {  0,   0,   0,   0,   0,   0,   0,   0,   0,   0}; //b
 #define MY_ADDRESS    1
 
 // Singleton instance of the radio driver
-//RH_RF69 rf69(RFM69_CS, RFM69_INT);
+RH_RF69 rf69(RFM69_CS, RFM69_INT);
 // Class to manage message delivery and receipt, using the driver declared above
-//RHReliableDatagram rf69_manager(rf69, MY_ADDRESS);
+RHReliableDatagram rf69_manager(rf69, MY_ADDRESS);
 
 // The encryption key has to be the same as the one in the server
 uint8_t crypt_key[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
@@ -63,7 +63,7 @@ uint8_t crypt_key[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
 
 uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
 uint8_t data[] = "";
-char radiopacket[RH_RF69_MAX_MESSAGE_LEN] = "time";
+char radiopacket[RH_RF69_MAX_MESSAGE_LEN] = "";
 #endif
 
 boolean joystick_connected = false;
@@ -75,6 +75,34 @@ int joystick_info[6] = {
   0, // c-button state
   0  // battery voltage
 };
+
+
+/************ SDCard Setup ***************/
+#include <SD.h>
+#define SD_CHIP_SELECT 9
+File logFile;
+
+String logTitles[18] = {
+  "Time",
+  "Temperature",
+  "Brightness",
+  "Lights",
+  "Throttle Raw",
+  "Throttle %",
+  "Z-Button",
+  "C-Button",
+  "Attopilot Voltage",
+  "Attopilot Amperage",
+  "ESC Battery Voltage",
+  "ESC Motor Amperage",
+  "ESC Motor Temperature",
+  "ESC Motor Torque",
+  "ESC Motor Current RPM",
+  "ESC Motor Maximum RPM",
+  "Wheel RPM",
+  "Current Mph"
+};
+
 
 #define TCAADDR 0x70
 
@@ -117,6 +145,11 @@ GPSData gData = {
 };
 
 boolean enableDebug = true;
+
+// Global Use data
+String logName = "";
+String dateNow = "";
+String timeNow = "";
 
 String format_time(int hr, int mn, int sx, int tzd){
   String theTime = "";
@@ -172,11 +205,23 @@ void setup() {
     Serial.println("GPS module found!");
   }
 
+  while (myI2CGPS.available()) {
+    gps.encode(myI2CGPS.read()); //Feed the GPS parser
+  }
+  if (gps.time.isUpdated()) {
+    timeNow = format_time(gps.time.hour(),gps.time.minute(),gps.time.second(),-4);
+    dateNow = format_date(gps.date.month(), gps.date.day(), gps.date.year());
+  }
+  
+  // Init SD
+  SDCard_init();
+
   init_light_sensor();
   
   BackLED.begin();
   BackLED.setLEDBrightness(2);
   BackLED.setLEDColor(255, 0, 0, 10);
+  
   #if defined(__SAMD51__)
   
   #else
@@ -202,6 +247,7 @@ void loop() {
   }
   #if defined(__SAMD51__)
   #else
+  radio_create_packet();
   radio_read();
   #endif
 }
@@ -301,7 +347,84 @@ void radio_read() {
     }
   }
 }
+
+void radio_create_packet() {
+  String data_to_send = "";
+
+  data_to_send = timeNow;
+  data_to_send += ",";
+  data_to_send += dateNow;
+
+  data_to_send.toCharArray(radiopacket, data_to_send.length() + 1);
+}
+
 #endif
+
+/*
+   checkSDCard Function
+   checks for SD Card presence.
+*/
+void SDCard_init() {
+  // Serial.println("Init the SD Card");
+  if (!SD.begin(SD_CHIP_SELECT)) {
+    // Serial.println("No SD Card Found");
+    //oledPrint("SD Card  is Missing", 500);
+    // die
+    while (1);
+  } else {
+    // Serial.println("Card Initalized");
+    //oledPrint("SD Card Connected. ", 500);
+    LogFile_setup();
+  }
+}
+
+/*
+   setupLogFile Function
+   creates logfile for the
+   current date.
+*/
+void LogFile_setup() {
+  String logDate = dateNow;
+  logName = logDate + ".csv";
+
+  if (!SD.exists("/logs/")) {
+    //oledPrint("logs folder missing!", 500);
+    //oledPrint("creating logs folder", 500);
+    if (SD.mkdir("/logs/")) {
+      //oledPrint("created logs folder", 500);
+    } else {
+      //oledPrint("error making folder", 0);
+      while (1);
+    }
+  }
+
+  logFile = SD.open("/logs/" + logName, FILE_WRITE);
+  if (logFile.size() == 0) {
+    // newly created, add titles
+    String title_str = "";
+    int titles_len = 18;
+    for(int i = 0; i < titles_len;i++) {
+      title_str += logTitles[i];
+      if (i != (titles_len - 1)) {
+        title_str += ",";
+      }
+    }
+    logFile.println(title_str);
+    logFile.close();
+  } else {
+    // just close for now.
+    logFile.close();
+  }
+
+  if (SD.exists("/logs/" + logName)) {
+    //oledPrint(logName + " present!", 500);
+    Serial.print(logName + " present!");
+  } else {
+    //oledPrint(logName + " missing!", 0);
+    Serial.print(logName + " missing!");
+    while (1);
+  }
+}
 
 void process_gps(GPSData data, boolean debug) {
   data.time = format_time(gps.time.hour(),gps.time.minute(),gps.time.second(),-4);
@@ -315,6 +438,9 @@ void process_gps(GPSData data, boolean debug) {
   data.mph  = gps.speed.mph();
   data.kmh  = gps.speed.kmph();
 
+  timeNow = data.time;
+  dateNow = data.date;
+  
   if (debug) {
     sprint_gps_data(data);
   }
