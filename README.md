@@ -1,5 +1,5 @@
 # eMB-Brain
-Software for Electric Mountainboards made by HighJinx
+Software and Design files for Electric Mountainboards made by HighJinx
 
 # Parts Used:
 - Version 4:
