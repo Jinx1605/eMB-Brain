@@ -322,7 +322,12 @@ void loop() {
     // displayInfo();
     process_gps(gData, enableDebug);
   }
+  
+
+  // create the radio packet
+  // then read what the radio is rec.
   #if defined(__SAMD51__)
+  
   #else
   radio_create_packet();
   radio_read();
