@@ -1,11 +1,39 @@
 /*************************************************** 
-  eMB Brains v5 - I2C Gone Nanners!!
+  eMB Brains v6 - I2C Gone Nanners!!
 
   - Dual Multiplexed Temp Monitor -
     1x TCA9548A I2C Multiplexer
     2x MLX90614 I2C Temp sensors
     2x 128x32 I2C OLED Displays
 
+  - Ambient Light Sensor -
+    1x APDS-9301 I2C Light Sensor
+
+  - GPS -
+    1x Sparkfun XA1110 I2C GPS Module
+
+  - RTC -
+    1x DS3231 I2C RTC Module
+    1x 122x 3v Coin Cell Battery
+
+  - Wifi -
+    1x ESP01/ESP8285 Module
+    - or -
+    1x ESP07/12 Module
+
+  - Radio -
+    1x RFM69HCW
+    - or -
+    1x RFM95HCW
+
+  - MicroSD -
+    1x MicroSD Clamshell Holder
+
+  - Electronic Speed Controller -
+    1x DimensionEngineering 32x2 USB Sabertooth ESC
+
+  - Current/Voltage Monitoring -
+    1x 90a Attopilot Voltage/Amperage Monitor
   
  ****************************************************/
 #include <SPI.h>
